@@ -1,5 +1,9 @@
 # Steam MOD 上传工具
 
+[![Release](https://img.shields.io/github/v/release/baijiahei-code/SteamModUploader?style=flat-square&label=Release&color=blue)](https://github.com/baijiahei-code/SteamModUploader/releases)
+[![Downloads](https://img.shields.io/github/downloads/baijiahei-code/SteamModUploader/total?style=flat-square&label=Downloads)](https://github.com/baijiahei-code/SteamModUploader/releases)
+[![License](https://img.shields.io/github/license/baijiahei-code/SteamModUploader?style=flat-square&label=License&color=green)](https://github.com/baijiahei-code/SteamModUploader/blob/main/LICENSE)
+
 一个基于 WPF（.NET 9）的图形化工具，用于自动生成 `mod.vdf` 并调用 `steamcmd` 上传 / 更新
 Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 
