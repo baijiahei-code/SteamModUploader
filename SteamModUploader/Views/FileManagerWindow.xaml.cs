@@ -29,15 +29,20 @@ public partial class FileManagerWindow : Window
     private int _listVersion;
     private int _fileVersion;
 
+    /// <summary>
+    /// 构造期间给控件赋初值会触发 TextChanged / Checked 等事件，
+    /// 此时字段尚未全部初始化、也不应该写配置或触发刷新，用它抑制。
+    /// </summary>
+    private bool _initializing = true;
+
     public FileManagerWindow(AppSettings settings)
     {
         InitializeComponent();
         _settings = settings;
         _log = new LogPanel(LogBox);
 
-        RootDirBox.Text = _settings.RootDir;
-        AutoBackupCheck.IsChecked = _settings.AutoBackupBeforeUpload;
-
+        // 防抖定时器必须在使用之前就绪：下面给 RootDirBox 赋值会同步触发 TextChanged，
+        // 而事件处理器里会用到它（否则 NullReferenceException，窗口根本打不开）
         _rootDebounce = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(400) };
         _rootDebounce.Tick += (_, _) =>
         {
@@ -45,6 +50,11 @@ public partial class FileManagerWindow : Window
             _ = RefreshModListAsync();
         };
 
+        RootDirBox.Text = _settings.RootDir;
+        AutoBackupCheck.IsChecked = _settings.AutoBackupBeforeUpload;
+        _initializing = false;
+
+        _rootDebounce.Stop();   // 构造期间的赋值不需要再触发一次刷新
         _ = RefreshModListAsync();
     }
 
@@ -61,6 +71,9 @@ public partial class FileManagerWindow : Window
     private void RootDirBox_TextChanged(object sender, TextChangedEventArgs e)
     {
         _settings.RootDir = RootDirBox.Text.Trim();
+
+        // 构造期间只是把配置值填进控件，不触发刷新
+        if (_initializing) return;
 
         // 目录枚举开销较大：输入过程中先防抖，停止输入 400ms 后再刷新
         _rootDebounce.Stop();
@@ -501,6 +514,10 @@ public partial class FileManagerWindow : Window
     private void AutoBackup_Changed(object sender, RoutedEventArgs e)
     {
         _settings.AutoBackupBeforeUpload = AutoBackupCheck.IsChecked == true;
+
+        // 构造期间赋初值也会触发本事件，此时不要往磁盘写配置
+        if (_initializing) return;
+
         SettingsService.Save(_settings);
     }
 
