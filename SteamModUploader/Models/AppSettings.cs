@@ -5,8 +5,8 @@ namespace SteamModUploader.Models;
 /// <summary>全局应用设置。</summary>
 public class AppSettings
 {
-    /// <summary>steamcmd.exe 路径。</summary>
-    public string SteamCmdPath { get; set; } = "D:\\steamcmd\\steamcmd.exe";
+    /// <summary>steamcmd.exe 路径（默认为空，首次启动会自动探测常见位置）。</summary>
+    public string SteamCmdPath { get; set; } = "";
 
     /// <summary>Steam 用户名。</summary>
     public string SteamUsername { get; set; } = "";
@@ -19,7 +19,7 @@ public class AppSettings
     public string SteamPasswordEncrypted { get; set; } = "";
 
     /// <summary>MOD 文件统一根目录（每个 MOD 在此下自动建立 content/preview/backup/output）。</summary>
-    public string RootDir { get; set; } = "D:\\SteamMOD\\mods";
+    public string RootDir { get; set; } = "";
 
     /// <summary>上传前是否自动备份内容到 backup 文件夹。</summary>
     public bool AutoBackupBeforeUpload { get; set; } = true;

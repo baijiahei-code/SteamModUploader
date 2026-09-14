@@ -1,0 +1,25 @@
+name: build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    # WPF 项目只能在 Windows 上编译
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: 还原并编译
+        run: dotnet build SteamModUploader.slnx -c Release --nologo
+
+      - name: 单元测试
+        run: dotnet test SteamModUploader.Tests/SteamModUploader.Tests.csproj -c Release --nologo

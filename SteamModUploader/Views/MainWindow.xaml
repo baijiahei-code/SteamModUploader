@@ -8,119 +8,6 @@
         Loaded="OnLoaded"
         Closing="OnClosing">
 
-    <Window.Resources>
-
-        <Style x:Key="Card" TargetType="Border">
-            <Setter Property="Background" Value="White"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Padding" Value="14"/>
-            <Setter Property="BorderBrush" Value="#E2E6EF"/>
-            <Setter Property="BorderThickness" Value="1"/>
-        </Style>
-
-        <Style x:Key="FieldLabel" TargetType="TextBlock">
-            <Setter Property="Margin" Value="0,0,0,4"/>
-            <Setter Property="Foreground" Value="#5B6472"/>
-            <Setter Property="FontSize" Value="12"/>
-        </Style>
-
-        <Style x:Key="CardTitle" TargetType="TextBlock">
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="#1B2838"/>
-            <Setter Property="Margin" Value="0,0,0,10"/>
-        </Style>
-
-        <Style x:Key="AppTextBox" TargetType="TextBox">
-            <Setter Property="Padding" Value="6,5"/>
-            <Setter Property="BorderBrush" Value="#D4D9E3"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
-
-        <Style x:Key="AppComboBox" TargetType="ComboBox">
-            <Setter Property="Padding" Value="4,4"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="VerticalContentAlignment" Value="Center"/>
-        </Style>
-
-        <Style x:Key="PrimaryButton" TargetType="Button">
-            <Setter Property="Background" Value="#1A9FFF"/>
-            <Setter Property="Foreground" Value="White"/>
-            <Setter Property="Padding" Value="22,10"/>
-            <Setter Property="BorderThickness" Value="0"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#1B8FE8"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#167FC9"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="GhostButton" TargetType="Button">
-            <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#2A475E"/>
-            <Setter Property="BorderBrush" Value="#C7CFDB"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="12,7"/>
-            <Setter Property="Cursor" Value="Hand"/>
-            <Setter Property="FontSize" Value="13"/>
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="bd" Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="6" Padding="{TemplateBinding Padding}">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#EFF3F9"/>
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#E2E8F1"/>
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="bd" Property="Opacity" Value="0.5"/>
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <Style x:Key="DangerButton" TargetType="Button" BasedOn="{StaticResource GhostButton}">
-            <Setter Property="Foreground" Value="#D64545"/>
-            <Setter Property="BorderBrush" Value="#E8B4B4"/>
-            <Style.Triggers>
-                <Trigger Property="IsMouseOver" Value="True">
-                    <Setter Property="Background" Value="#FBEEEE"/>
-                </Trigger>
-            </Style.Triggers>
-        </Style>
-
-    </Window.Resources>
-
     <Grid Margin="14">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -144,7 +31,7 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Content="📁 文件管理（全局）" Click="OpenFileManager_Click" Style="{StaticResource GhostButton}"/>
-                    <TextBlock Text="v1.0.0" FontSize="12" Foreground="#9AA4B2" VerticalAlignment="Center" Margin="12,0,0,0"/>
+                    <TextBlock x:Name="VersionText" Text="v1.0.0" FontSize="12" Foreground="#9AA4B2" VerticalAlignment="Center" Margin="12,0,0,0"/>
                 </StackPanel>
             </Grid>
         </Border>
@@ -163,7 +50,7 @@
 
                     <Border DockPanel.Dock="Bottom" Margin="0,10,0,0" Padding="0,10,0,0"
                             BorderBrush="#E9EDF4" BorderThickness="0,1,0,0">
-                        <WrapPanel>
+                        <WrapPanel x:Name="ProfileButtonPanel">
                             <Button Content="新建" Click="NewProfile_Click" Style="{StaticResource GhostButton}" Margin="0,0,4,4" Padding="0,7" MinWidth="54"/>
                             <Button Content="复制" Click="DuplicateProfile_Click" Style="{StaticResource GhostButton}" Margin="0,0,4,4" Padding="0,7" MinWidth="54"/>
                             <Button Content="导入" Click="ImportVdf_Click" Style="{StaticResource GhostButton}" Margin="0,0,4,4" Padding="0,7" MinWidth="54"/>
@@ -175,30 +62,7 @@
                              BorderThickness="0" Background="Transparent"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemContainerStyle>
-                            <Style TargetType="ListBoxItem">
-                                <Setter Property="Padding" Value="10,8"/>
-                                <Setter Property="Margin" Value="0,0,0,4"/>
-                                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                                <Setter Property="Cursor" Value="Hand"/>
-                                <Setter Property="Template">
-                                    <Setter.Value>
-                                        <ControlTemplate TargetType="ListBoxItem">
-                                            <Border x:Name="bd" Background="#F6F8FB" CornerRadius="6"
-                                                    Padding="{TemplateBinding Padding}">
-                                                <ContentPresenter/>
-                                            </Border>
-                                            <ControlTemplate.Triggers>
-                                                <Trigger Property="IsSelected" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#DCEBFF"/>
-                                                </Trigger>
-                                                <Trigger Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="bd" Property="Background" Value="#EEF3FA"/>
-                                                </Trigger>
-                                            </ControlTemplate.Triggers>
-                                        </ControlTemplate>
-                                    </Setter.Value>
-                                </Setter>
-                            </Style>
+                            <Style TargetType="ListBoxItem" BasedOn="{StaticResource ModListBoxItem}"/>
                         </ListBox.ItemContainerStyle>
                         <ListBox.ItemTemplate>
                             <DataTemplate>
@@ -246,7 +110,7 @@
 
                             <StackPanel Grid.Column="0">
                                 <TextBlock Text="游戏 AppID（appid）" Style="{StaticResource FieldLabel}"/>
-                                <TextBox x:Name="AppIdBox" Style="{StaticResource AppTextBox}" Text="2868840"/>
+                                <TextBox x:Name="AppIdBox" Style="{StaticResource AppTextBox}"/>
                             </StackPanel>
 
                             <StackPanel Grid.Column="2">
@@ -262,6 +126,13 @@
                         <StackPanel Margin="0,12,0,0">
                             <TextBlock Text="版本 / 更新说明（changenote）" Style="{StaticResource FieldLabel}"/>
                             <TextBox x:Name="VersionBox" Style="{StaticResource AppTextBox}"/>
+                        </StackPanel>
+
+                        <StackPanel Margin="0,12,0,0">
+                            <TextBlock Text="创意工坊简介（description，可多行，留空则不提交、不会改动网页上的简介）" Style="{StaticResource FieldLabel}"/>
+                            <TextBox x:Name="DescriptionBox" Style="{StaticResource AppTextBox}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" Height="64"
+                                     VerticalContentAlignment="Top" VerticalScrollBarVisibility="Auto"/>
                         </StackPanel>
 
                         <StackPanel Margin="0,12,0,0">
@@ -417,11 +288,7 @@
                             Style="{StaticResource DangerButton}" Padding="10,4" FontSize="12"
                             Margin="0,0,8,0" Visibility="Collapsed"/>
                 </DockPanel>
-                <TextBox x:Name="LogBox" IsReadOnly="True" FontFamily="Consolas" FontSize="12.5"
-                         Background="#1B2230" Foreground="#D6E1F0"
-                         BorderThickness="0" Padding="10"
-                         VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto"
-                         TextWrapping="NoWrap"/>
+                <TextBox x:Name="LogBox" Style="{StaticResource LogTextBox}"/>
             </DockPanel>
         </Border>
     </Grid>

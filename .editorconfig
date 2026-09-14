@@ -1,0 +1,13 @@
+root = true
+
+# ---------------- 静态分析规则的刻意例外 ----------------
+
+[*.cs]
+# 本程序需要“兜底捕获异常”保证单个操作失败不影响主流程（日志、清理等），不强制收窄 catch
+dotnet_diagnostic.CA1031.severity = none
+
+[SteamModUploader.Tests/*.cs]
+# 测试方法命名采用「被测对象_场景」风格，下划线是刻意保留的
+dotnet_diagnostic.CA1707.severity = none
+# 测试类没有终结器，不需要 GC.SuppressFinalize
+dotnet_diagnostic.CA1816.severity = none

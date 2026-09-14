@@ -6,13 +6,12 @@
         Background="#F3F4F8" ShowInTaskbar="False">
     <StackPanel Margin="18">
         <TextBlock x:Name="PromptText" Foreground="#2A475E" FontSize="13" TextWrapping="Wrap"/>
-        <TextBox x:Name="InputBox" Margin="0,10,0,0" Padding="6,6" FontSize="14"
-                 BorderBrush="#D4D9E3" BorderThickness="1"/>
+        <TextBox x:Name="InputBox" Margin="0,10,0,0" Style="{StaticResource AppTextBox}" FontSize="14"/>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
             <Button Content="确定" Width="86" Margin="0,0,10,0" Padding="0,6"
-                    Click="Ok_Click" IsDefault="True"/>
+                    Click="Ok_Click" IsDefault="True" Style="{StaticResource PrimaryButton}" FontSize="13"/>
             <Button Content="取消" Width="86" Padding="0,6"
-                    Click="Cancel_Click" IsCancel="True"/>
+                    Click="Cancel_Click" IsCancel="True" Style="{StaticResource GhostButton}" FontSize="13"/>
         </StackPanel>
     </StackPanel>
 </Window>

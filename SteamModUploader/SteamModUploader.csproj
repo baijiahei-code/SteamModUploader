@@ -9,7 +9,14 @@
     <RootNamespace>SteamModUploader</RootNamespace>
     <AssemblyName>SteamModUploader</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
     <Version>1.0.0</Version>
+    <AssemblyTitle>Steam MOD 上传工具</AssemblyTitle>
+    <Product>Steam MOD 上传工具</Product>
+    <Description>自动生成 mod.vdf 并通过 steamcmd 上传 Steam 创意工坊</Description>
+    <NeutralLanguage>zh-Hans</NeutralLanguage>
+    <!-- 单文件发布时只保留中/英卫星资源，避免默认带出 12 个语言的资源目录 -->
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
   </PropertyGroup>
 
   <ItemGroup>

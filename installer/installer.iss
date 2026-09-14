@@ -3,8 +3,13 @@
 ; 下载：https://jrsoftware.org/isdl.php
 
 #define MyAppName "Steam MOD 上传工具"
-#define MyAppVersion "1.0.0"
 #define MyAppExeName "SteamModUploader.exe"
+
+; 版本号默认值；打包脚本会通过 ISCC /DMyAppVersion=x.y.z 传入 csproj 中的版本，
+; 这样版本号只需在 SteamModUploader.csproj 里维护一处
+#ifndef MyAppVersion
+  #define MyAppVersion "1.0.0"
+#endif
 
 [Setup]
 ; 安装程序的唯一标识（GUID）
@@ -22,6 +27,8 @@ OutputBaseFilename=SteamModUploader-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
+; 安装程序自身的图标
+SetupIconFile=..\SteamModUploader\app.ico
 ; 允许非管理员安装到用户目录（可选）
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible

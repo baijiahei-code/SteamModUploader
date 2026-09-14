@@ -14,8 +14,8 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="SourceBox" Grid.Column="0" Padding="6,5" FontSize="13" BorderBrush="#D4D9E3" BorderThickness="1"/>
-            <Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0" Padding="12,6" Click="BrowseSource_Click"/>
+            <TextBox x:Name="SourceBox" Grid.Column="0" Style="{StaticResource AppTextBox}"/>
+            <Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0" Padding="12,6" Click="BrowseSource_Click" Style="{StaticResource GhostButton}"/>
         </Grid>
 
         <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
@@ -30,13 +30,13 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
-            <TextBox x:Name="PreviewBox" Grid.Column="0" Padding="6,5" FontSize="13" BorderBrush="#D4D9E3" BorderThickness="1"/>
-            <Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0" Padding="12,6" Click="BrowsePreview_Click"/>
+            <TextBox x:Name="PreviewBox" Grid.Column="0" Style="{StaticResource AppTextBox}"/>
+            <Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0" Padding="12,6" Click="BrowsePreview_Click" Style="{StaticResource GhostButton}"/>
         </Grid>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
-            <Button Content="开始迁移" Width="96" Margin="0,0,10,0" Padding="0,7" Click="Ok_Click" IsDefault="True"/>
-            <Button Content="取消" Width="80" Padding="0,7" Click="Cancel_Click" IsCancel="True"/>
+            <Button Content="开始迁移" Width="96" Margin="0,0,10,0" Padding="0,7" Click="Ok_Click" IsDefault="True" Style="{StaticResource PrimaryButton}" FontSize="13"/>
+            <Button Content="取消" Width="80" Padding="0,7" Click="Cancel_Click" IsCancel="True" Style="{StaticResource GhostButton}" FontSize="13"/>
         </StackPanel>
     </StackPanel>
 </Window>

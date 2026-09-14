@@ -1,0 +1,9 @@
+# 二进制文件：不要做文本/换行处理
+*.ico binary
+*.png binary
+*.exe binary
+*.zip binary
+
+# Windows 批处理与 PowerShell 脚本必须保持 CRLF，否则在某些环境下会执行失败
+*.bat text eol=crlf
+*.ps1 text eol=crlf
