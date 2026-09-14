@@ -68,6 +68,29 @@ public static class FileManager
         var ext = Path.GetExtension(path).ToLowerInvariant();
         return ext is ".jpg" or ".jpeg" or ".png";
     }
+
+    /// <summary>
+    /// 在 MOD 的 preview 目录里自动找一张预览图（Steam 支持的 jpg/png 优先）。
+    /// 找不到返回空字符串。
+    /// </summary>
+    public static string FindPreviewImage(string root, ModProfile p)
+    {
+        var dir = PreviewDir(root, p);
+        if (!Directory.Exists(dir)) return "";
+
+        try
+        {
+            return Directory.EnumerateFiles(dir)
+                .Where(IsImageFile)
+                .OrderByDescending(IsSteamPreviewFile)          // jpg / png 优先
+                .ThenBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault() ?? "";
+        }
+        catch
+        {
+            return "";
+        }
+    }
     public static string ContentDir(string root, ModProfile p) => Path.Combine(ModDir(root, p), "content");
     public static string PreviewDir(string root, ModProfile p) => Path.Combine(ModDir(root, p), "preview");
     public static string BackupDir(string root, ModProfile p) => Path.Combine(ModDir(root, p), "backup");

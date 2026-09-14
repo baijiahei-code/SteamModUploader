@@ -226,6 +226,19 @@ public partial class MainWindow : Window
         {
             _suppressEvents = false;
         }
+
+        // 预览图留空时，尝试从该 MOD 的 preview 目录自动识别一张（把图丢进 preview 即可生效）
+        if (p != null && string.IsNullOrWhiteSpace(p.PreviewFile))
+        {
+            var detected = FileManager.FindPreviewImage(_settings.RootDir, p);
+            if (!string.IsNullOrEmpty(detected))
+            {
+                p.PreviewFile = detected;
+                PreviewBox.Text = detected;
+                Log($"已自动识别预览图：{detected}");
+            }
+        }
+
         UpdatePreviewImage();
     }
 
@@ -332,23 +345,37 @@ public partial class MainWindow : Window
         _profiles.Add(p);
         _current = p;
 
-        // 已设置根目录时：一并创建标准目录结构并填充内容文件夹
+        // 已设置根目录时：建立标准目录结构（已存在则只补全缺失的子目录），
+        // 并自动填好内容文件夹 / VDF 输出目录 / 预览图
         if (!string.IsNullOrWhiteSpace(_settings.RootDir))
         {
-            if (Directory.Exists(FileManager.ModDir(_settings.RootDir, p)))
+            var modDir = FileManager.ModDir(_settings.RootDir, p);
+            var existed = Directory.Exists(modDir);
+
+            FileManager.EnsureStructure(_settings.RootDir, p);
+            Log(existed
+                ? $"提示：根目录下已存在文件夹「{safe}」，已补全缺失的子目录。"
+                : $"已创建标准目录结构：{modDir}");
+
+            p.ContentFolder = FileManager.ContentDir(_settings.RootDir, p);
+            p.VdfDir = FileManager.OutputDir(_settings.RootDir, p);
+
+            var preview = FileManager.FindPreviewImage(_settings.RootDir, p);
+            if (!string.IsNullOrEmpty(preview))
             {
-                Log($"提示：根目录下已存在文件夹「{safe}」，未重复创建目录结构。");
+                p.PreviewFile = preview;
+                Log($"已自动填写预览图：{preview}");
             }
             else
             {
-                FileManager.EnsureStructure(_settings.RootDir, p);
-                p.ContentFolder = FileManager.ContentDir(_settings.RootDir, p);
-                Log($"已创建标准目录结构：{FileManager.ModDir(_settings.RootDir, p)}");
+                Log($"提示：把预览图放进 {FileManager.PreviewDir(_settings.RootDir, p)} 后，重新选中该 MOD 会自动填入预览图路径。");
             }
+
+            Log($"已自动填写内容文件夹与 VDF 输出目录：{p.VdfDir}");
         }
         else
         {
-            Log("提示：未设置 MOD 文件根目录，暂未创建目录结构。可在「文件管理」中设置根目录后使用「创建标准目录结构」。");
+            Log("提示：未设置 MOD 文件根目录，暂未创建目录结构（也无法自动填写内容文件夹 / VDF 输出目录）。可在「文件管理」中设置根目录后使用「创建标准目录结构」。");
         }
 
         // 同步到共享设置并保存，确保文件管理窗口立即能看到新 MOD

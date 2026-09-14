@@ -237,4 +237,23 @@ public class FileManagerTests : IDisposable
         Assert.True(FileManager.IsSteamPreviewFile("a.jpeg"));
         Assert.False(FileManager.IsSteamPreviewFile("a.png.txt"));
     }
+
+    [Fact]
+    public void 预览图识别_steam支持的格式优先且忽略非图片()
+    {
+        var p = new ModProfile { Name = "预览识别" };
+        var dir = FileManager.PreviewDir(_root, p);
+        Directory.CreateDirectory(dir);
+
+        Assert.Equal("", FileManager.FindPreviewImage(_root, p));
+
+        // 只有 webp（Steam 不支持预览）+ 一个文本文件
+        File.WriteAllText(Path.Combine(dir, "cover.webp"), "x");
+        File.WriteAllText(Path.Combine(dir, "readme.txt"), "x");
+        Assert.EndsWith("cover.webp", FileManager.FindPreviewImage(_root, p));
+
+        // 出现 jpg/png 后应优先选它
+        File.WriteAllText(Path.Combine(dir, "cover.png"), "x");
+        Assert.EndsWith("cover.png", FileManager.FindPreviewImage(_root, p));
+    }
 }
