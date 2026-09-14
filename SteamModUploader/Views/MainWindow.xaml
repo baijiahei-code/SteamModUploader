@@ -178,8 +178,8 @@
                         <Border Margin="0,12,0,0" BorderBrush="#E2E6EF" BorderThickness="1" CornerRadius="6"
                                 Padding="8" Background="#FAFBFD" MaxHeight="180">
                             <Grid>
-                                <TextBlock x:Name="NoPreviewText" Text="（暂无预览图，可点击下方「导入预览图」选择）"
-                                           Foreground="#9AA4B2" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="NoPreviewText" Text="（暂无预览图：把图片放到上面的路径，或用「文件管理（全局）」里的「导入预览图…」）"
+                                           Foreground="#9AA4B2" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="Wrap" TextAlignment="Center" Margin="8"/>
                                 <Image x:Name="PreviewImage" MaxHeight="160" Stretch="Uniform"
                                        HorizontalAlignment="Center" VerticalAlignment="Center" Visibility="Collapsed"/>
                             </Grid>
