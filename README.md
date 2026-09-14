@@ -1,5 +1,9 @@
 # Steam MOD 上传工具
 
+[![Release](https://img.shields.io/github/v/release/baijiahei-code/SteamModUploader?style=flat-square&label=Release&color=blue)](https://github.com/baijiahei-code/SteamModUploader/releases)
+[![Downloads](https://img.shields.io/github/downloads/baijiahei-code/SteamModUploader/total?style=flat-square&label=Downloads)](https://github.com/baijiahei-code/SteamModUploader/releases)
+[![License](https://img.shields.io/github/license/baijiahei-code/SteamModUploader?style=flat-square&label=License&color=green)](https://github.com/baijiahei-code/SteamModUploader/blob/main/LICENSE)
+
 一个基于 WPF（.NET 9）的图形化工具，用于自动生成 `mod.vdf` 并调用 `steamcmd` 上传 / 更新
 Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 
@@ -47,11 +51,11 @@ Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
      一键批量替换所有根目录/内容文件夹/预览图/VDF 路径（并顺带更新 VDF 文件内路径）
 
 3. **新建或导入 MOD**：
-   - 点击「新建」手动填写，或「导入」直接读取已有的 `mod.vdf`（例如 `Sample\mod.vdf`）
+   - 点击「新建」手动填写，或「导入」直接读取已有的 `mod.vdf` 文件
 
 4. **填写 MOD 信息**：
    - 标题、AppID（默认 2868840）、可见性、版本/更新说明
-   - 内容文件夹：选择 MOD 文件所在目录（如 `Sample\paks`）
+   - 内容文件夹：选择 MOD 文件所在目录
    - 预览图：可选，选择一张图片作为创意工坊封面（界面实时预览）
    - PublishedFileID：**首次上传留空**；更新已有 MOD 时填写
 
@@ -78,7 +82,7 @@ Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 - **创建标准目录结构**：对选中的 MOD 补全缺失的目录（已完整时会明确提示）
 - **导入内容文件**：多选文件复制到 `content/`
 - **导入预览图**：复制到 `preview/`，界面实时预览
-- **迁移向导**：把已有 MOD 文件夹（如 `Sample/paks`）整体复制/移动到 `content/`，
+- **迁移向导**：把已有 MOD 文件夹整体复制/移动到 `content/`，
   可选一并导入预览图
 - **打包发布版 zip**：把 `content/` 打包到 `output/`，文件名自动带版本号
   （如 `MOD名_v1.2.0.zip`），用于分发
@@ -130,8 +134,7 @@ dotnet publish SteamModUploader\SteamModUploader.csproj -c Release -r win-x64 `
 ## 安全说明
 
 - **密码落盘加密**：密码使用 Windows DPAPI（当前用户）+ **应用专属熵**加密后保存，
-  磁盘上无明文；换用户或换机器后需重新输入。不兼容旧版本（无熵）保存的密文，
-  升级后旧密码需重新填写并保存一次。
+  磁盘上无明文；换用户或换机器后需重新输入。
 - **密码不出现于命令行**：调用 `steamcmd` 时密码通过**标准输入**传递，
   `+login <用户名>` 不再附带密码参数，避免被任务管理器 / `wmic` 等工具读取进程命令行。
 - **日志脱敏**：日志输出会隐藏密码（替换为 `***`），并按“独立词边界”匹配，
@@ -151,7 +154,6 @@ dotnet publish SteamModUploader\SteamModUploader.csproj -c Release -r win-x64 `
 
 - 本工具只负责调用 `steamcmd`，账号密码等信息请通过官方渠道确认安全性。
 - 上传需要先拥有对应游戏的开发者 / 创意工坊权限。
-- `Sample/` 目录包含一个示例 MOD 结构，可参考其 `mod.vdf` 的字段含义。
 
 ## 许可证
 
