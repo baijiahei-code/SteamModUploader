@@ -106,4 +106,29 @@ public class SettingsServiceTests : IDisposable
 
         Assert.False(File.Exists(SettingsService.SettingsFile + ".tmp"));
     }
+
+    [Fact]
+    public void 保存_会留下带时间戳的自动备份()
+    {
+        SettingsService.Save(new AppSettings { SteamUsername = "u1" });
+        SettingsService.Save(new AppSettings { SteamUsername = "u2" });
+
+        var backupDir = Path.Combine(Path.GetDirectoryName(SettingsService.SettingsFile)!, "backups");
+        var backups = Directory.GetFiles(backupDir, "settings_*.json");
+
+        Assert.NotEmpty(backups);
+        // 备份里应当是修改前的那一版（.prev 会被下一次保存覆盖，自动备份才是兜底）
+        Assert.Contains(backups, f => File.ReadAllText(f).Contains("u1"));
+    }
+
+    [Fact]
+    public void 主配置损坏时_会从自动备份恢复()
+    {
+        SettingsService.Save(new AppSettings { SteamUsername = "u1" });
+        SettingsService.Save(new AppSettings { SteamUsername = "u2" });
+
+        File.WriteAllText(SettingsService.SettingsFile, "{ 这不是合法 JSON");
+
+        Assert.Equal("u1", SettingsService.Load().SteamUsername);
+    }
 }

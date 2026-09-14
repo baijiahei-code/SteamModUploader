@@ -25,15 +25,44 @@ public static class SettingsService
     /// <summary>设置文件所在目录（跟随 SettingsFile，不再单独维护一份常量）。</summary>
     private static string SettingsDir => Path.GetDirectoryName(SettingsFile) ?? ".";
 
+    /// <summary>历史配置备份目录：每次保存前留一份带时间戳的副本。</summary>
+    private static string BackupDir => Path.Combine(SettingsDir, "backups");
+
+    /// <summary>最多保留的备份份数。</summary>
+    private const int MaxBackups = 10;
+
     public static AppSettings Load()
+    {
+        var settings = TryLoadFrom(SettingsFile, logFailure: true);
+        if (settings != null) return settings;
+
+        // 主配置存在但读不出来（被写坏 / 手工改错）时，从最近一份自动备份恢复，
+        // 避免"一次误写就彻底丢失配置"。文件不存在时不走这里，免得误恢复用户已清空的配置。
+        if (!File.Exists(SettingsFile))
+            return new AppSettings();
+
+        foreach (var backup in EnumerateBackups())
+        {
+            var recovered = TryLoadFrom(backup, logFailure: false);
+            if (recovered == null) continue;
+
+            Logger.Write($"主配置无法读取，已从备份恢复：{backup}");
+            return recovered;
+        }
+
+        return new AppSettings();
+    }
+
+    /// <summary>读取并反序列化配置；失败返回 null。</summary>
+    private static AppSettings? TryLoadFrom(string path, bool logFailure)
     {
         try
         {
-            if (!File.Exists(SettingsFile)) return new AppSettings();
+            if (!File.Exists(path)) return null;
 
-            var json = File.ReadAllText(SettingsFile);
+            var json = File.ReadAllText(path);
             var s = JsonSerializer.Deserialize<AppSettings>(json);
-            if (s == null) return new AppSettings();
+            if (s == null) return null;
 
             Normalize(s);
             // 从加密字段解密回内存中的明文密码
@@ -42,9 +71,24 @@ public static class SettingsService
         }
         catch (Exception ex)
         {
-            // 读取失败则返回默认设置，但记入日志便于排查
-            Logger.Write($"读取配置失败，已回退为默认配置：{ex.Message}");
-            return new AppSettings();
+            if (logFailure) Logger.Write($"读取配置失败：{path}（{ex.Message}）");
+            return null;
+        }
+    }
+
+    /// <summary>按时间从新到旧枚举自动备份。</summary>
+    private static IEnumerable<string> EnumerateBackups()
+    {
+        try
+        {
+            if (!Directory.Exists(BackupDir)) return Array.Empty<string>();
+            return Directory.EnumerateFiles(BackupDir, "settings_*.json")
+                .OrderByDescending(File.GetLastWriteTime)
+                .ToList();
+        }
+        catch
+        {
+            return Array.Empty<string>();
         }
     }
 
@@ -56,6 +100,9 @@ public static class SettingsService
         settings.SteamPasswordEncrypted = Encrypt(settings.SteamPassword);
         var json = JsonSerializer.Serialize(settings, SerializerOptions);
 
+        // 每次保存前先留一份带时间戳的副本（.prev 会被下一次保存覆盖，只靠它不够）
+        BackupCurrentFile();
+
         // 先写临时文件再原子替换：避免写到一半崩溃/断电留下半截 JSON；
         // File.Replace 会同时把上一版留作 settings.json.prev，便于误覆盖后恢复
         var temp = SettingsFile + ".tmp";
@@ -64,6 +111,31 @@ public static class SettingsService
             File.Replace(temp, SettingsFile, SettingsFile + ".prev", ignoreMetadataErrors: true);
         else
             File.Move(temp, SettingsFile);
+    }
+
+    /// <summary>把当前配置复制到 backups 目录，并清理超出保留份数的旧备份。</summary>
+    private static void BackupCurrentFile()
+    {
+        try
+        {
+            if (!File.Exists(SettingsFile)) return;
+            Directory.CreateDirectory(BackupDir);
+
+            var current = File.ReadAllText(SettingsFile);
+
+            // 与最近一份备份内容相同则跳过，避免频繁保存产生大量重复文件
+            var newest = EnumerateBackups().FirstOrDefault();
+            if (newest != null && File.ReadAllText(newest) == current) return;
+
+            File.WriteAllText(Path.Combine(BackupDir, $"settings_{DateTime.Now:yyyyMMdd_HHmmss}.json"), current);
+
+            foreach (var old in EnumerateBackups().Skip(MaxBackups))
+                File.Delete(old);
+        }
+        catch
+        {
+            // 备份失败不影响保存主流程
+        }
     }
 
     /// <summary>补齐反序列化后可能为 null 的字段，避免调用方到处判空。</summary>
