@@ -66,9 +66,11 @@ Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 3. **新建或导入 MOD**：
    - 点击「新建」手动填写，或「导入」直接读取已有的 `mod.vdf` 文件
    - 已设置 MOD 文件根目录时，新建会**自动**建立 `content / preview / backup / output` 并填好：
-     内容文件夹、**VDF 输出目录（`output`）**、**预览图路径**（有图就用已有的，没有则先填好
-     `<MOD>\preview\preview.png`，把图放进去即自动生效；若你放的是别的文件名，
-     重新选中该 MOD 会自动识别并纠正为实际文件）
+     内容文件夹、**VDF 输出目录（`output`）**、**预览图路径**（`preview` 里已有 jpg / png 就直接用；
+     没有则先填好 `<MOD>\preview\preview.png`，把图放进去即自动生效。若你放的是别的文件名，
+     重新选中该 MOD 会自动识别并纠正为实际文件，并立即保存）
+   - 预览图只识别 Steam 接受的 **jpg / jpeg / png**；若 `preview` 里只有 webp / bmp / gif，
+     会提示转换格式（否则上传时会跳过 `previewfile` 字段）
 
 4. **填写 MOD 信息**：
    - 标题、AppID（新建时留空，上传前填写）、可见性、版本/更新说明

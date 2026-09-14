@@ -70,8 +70,8 @@ public static class FileManager
     }
 
     /// <summary>
-    /// 在 MOD 的 preview 目录里自动找一张预览图（Steam 支持的 jpg/png 优先）。
-    /// 找不到返回空字符串。
+    /// 在 MOD 的 preview 目录里自动找一张**符合 Steam 要求**的预览图（仅 jpg / jpeg / png）。
+    /// 找不到返回空字符串。webp / bmp / gif 不能作为 previewfile 上传，故不返回。
     /// </summary>
     public static string FindPreviewImage(string root, ModProfile p)
     {
@@ -81,9 +81,30 @@ public static class FileManager
         try
         {
             return Directory.EnumerateFiles(dir)
-                .Where(IsImageFile)
-                .OrderByDescending(IsSteamPreviewFile)          // jpg / png 优先
-                .ThenBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
+                .Where(IsSteamPreviewFile)
+                .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault() ?? "";
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
+    /// <summary>
+    /// preview 目录里存在、但 Steam 不接受作为预览图的图片（webp / bmp / gif 等）。
+    /// 用于提示用户转换格式。找不到返回空字符串。
+    /// </summary>
+    public static string FindNonSteamImage(string root, ModProfile p)
+    {
+        var dir = PreviewDir(root, p);
+        if (!Directory.Exists(dir)) return "";
+
+        try
+        {
+            return Directory.EnumerateFiles(dir)
+                .Where(f => IsImageFile(f) && !IsSteamPreviewFile(f))
+                .OrderBy(f => Path.GetFileName(f), StringComparer.OrdinalIgnoreCase)
                 .FirstOrDefault() ?? "";
         }
         catch

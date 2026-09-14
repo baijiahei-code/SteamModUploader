@@ -239,7 +239,7 @@ public class FileManagerTests : IDisposable
     }
 
     [Fact]
-    public void 预览图识别_steam支持的格式优先且忽略非图片()
+    public void 预览图识别_只认steam支持的格式且忽略非图片()
     {
         var p = new ModProfile { Name = "预览识别" };
         var dir = FileManager.PreviewDir(_root, p);
@@ -247,13 +247,18 @@ public class FileManagerTests : IDisposable
 
         Assert.Equal("", FileManager.FindPreviewImage(_root, p));
 
-        // 只有 webp（Steam 不支持预览）+ 一个文本文件
+        // 只有 webp（Steam 不能用作 previewfile）+ 一个文本文件：
+        // 不能当作可用预览图，但能被识别出来用于提示“格式不符”
         File.WriteAllText(Path.Combine(dir, "cover.webp"), "x");
         File.WriteAllText(Path.Combine(dir, "readme.txt"), "x");
-        Assert.EndsWith("cover.webp", FileManager.FindPreviewImage(_root, p));
+        Assert.Equal("", FileManager.FindPreviewImage(_root, p));
+        Assert.EndsWith("cover.webp", FileManager.FindNonSteamImage(_root, p));
 
-        // 出现 jpg/png 后应优先选它
+        // 出现 png 后即可用；多个可用图时按文件名排序取第一个，结果稳定
         File.WriteAllText(Path.Combine(dir, "cover.png"), "x");
         Assert.EndsWith("cover.png", FileManager.FindPreviewImage(_root, p));
+
+        File.WriteAllText(Path.Combine(dir, "aaa.jpg"), "x");
+        Assert.EndsWith("aaa.jpg", FileManager.FindPreviewImage(_root, p));
     }
 }

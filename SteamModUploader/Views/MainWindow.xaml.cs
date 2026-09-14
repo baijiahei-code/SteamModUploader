@@ -240,10 +240,26 @@ public partial class MainWindow : Window
                 p.PreviewFile = detected;
                 PreviewBox.Text = detected;
                 Log($"已自动识别预览图：{detected}");
+                SaveSettings();   // 立即落盘，否则这次纠正会在重启后退回旧路径
             }
+
+            LogNonSteamImageHint(p);
         }
 
         UpdatePreviewImage();
+    }
+
+    /// <summary>
+    /// preview 目录里只有 Steam 不接受的图片格式时提示（webp / bmp / gif 无法作为 previewfile 上传）。
+    /// </summary>
+    private void LogNonSteamImageHint(ModProfile p)
+    {
+        var other = FileManager.FindNonSteamImage(_settings.RootDir, p);
+        if (string.IsNullOrEmpty(other)) return;
+
+        Log($"注意：preview 目录里的 {Path.GetFileName(other)} 不是 Steam 支持的预览图格式" +
+            "（只接受 jpg / jpeg / png），上传时会跳过 previewfile 字段；" +
+            "请另存为 jpg 或 png，然后重新选中该 MOD 即可自动识别。");
     }
 
     private void SaveFormToProfile()
@@ -386,6 +402,7 @@ public partial class MainWindow : Window
             Log($"已自动填写预览图：{preview}");
         }
         p.PreviewFile = preview;
+        LogNonSteamImageHint(p);
 
         Log($"已自动填写内容文件夹与 VDF 输出目录：{p.VdfDir}");
 
