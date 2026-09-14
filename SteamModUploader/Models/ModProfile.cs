@@ -28,7 +28,7 @@ public class ModProfile : INotifyPropertyChanged
     private string _changeNote = "";
     private string _description = "";
     private string _publishedFileId = "";
-    private string _vdfPath = "";
+    private string _vdfDir = "";
 
     /// <summary>显示名称（仅用于本地管理，不上传）。</summary>
     public string Name
@@ -96,11 +96,14 @@ public class ModProfile : INotifyPropertyChanged
         set => Set(ref _publishedFileId, value);
     }
 
-    /// <summary>生成的 VDF 保存路径（为空则用临时目录）。</summary>
-    public string VdfPath
+    /// <summary>
+    /// 生成的 VDF 输出目录（为空则用系统临时目录）。
+    /// 指定目录时会在其中生成 workshopitem.vdf；临时目录的文件在上传后会被删除。
+    /// </summary>
+    public string VdfDir
     {
-        get => _vdfPath;
-        set => Set(ref _vdfPath, value);
+        get => _vdfDir;
+        set => Set(ref _vdfDir, value);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;

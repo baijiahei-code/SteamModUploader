@@ -186,15 +186,15 @@
                         </Border>
 
                         <StackPanel Margin="0,12,0,0">
-                            <TextBlock Text="VDF 保存路径（可选，默认使用临时目录）" Style="{StaticResource FieldLabel}"/>
+                            <TextBlock Text="VDF 输出目录（可选，留空则用系统临时目录；选目录后会在其中生成 workshopitem.vdf）" Style="{StaticResource FieldLabel}"/>
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*"/>
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBox x:Name="VdfPathBox" Grid.Column="0" Style="{StaticResource AppTextBox}"/>
+                                <TextBox x:Name="VdfDirBox" Grid.Column="0" Style="{StaticResource AppTextBox}"/>
                                 <Button Grid.Column="1" Content="浏览…" Margin="8,0,0,0"
-                                        Tag="VdfPathBox" Click="BrowseSaveFile_Click" Style="{StaticResource GhostButton}"/>
+                                        Tag="VdfDirBox" Click="BrowseVdfDir_Click" Style="{StaticResource GhostButton}"/>
                             </Grid>
                         </StackPanel>
 

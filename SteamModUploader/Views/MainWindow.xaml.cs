@@ -36,6 +36,9 @@ public partial class MainWindow : Window
     /// <summary>Steam 对创意工坊简介的长度限制。</summary>
     private const int MaxDescriptionLength = 8000;
 
+    /// <summary>指定的 VDF 输出目录中生成的文件名。</summary>
+    private const string VdfFileName = "workshopitem.vdf";
+
     public MainWindow()
     {
         InitializeComponent();
@@ -216,7 +219,7 @@ public partial class MainWindow : Window
             ContentFolderBox.Text = p?.ContentFolder ?? "";
             PreviewBox.Text = p?.PreviewFile ?? "";
             PublishedIdBox.Text = p?.PublishedFileId ?? "";
-            VdfPathBox.Text = p?.VdfPath ?? "";
+            VdfDirBox.Text = p?.VdfDir ?? "";
             UpdatePublishedHint();
         }
         finally
@@ -240,7 +243,7 @@ public partial class MainWindow : Window
         _current.ContentFolder = ContentFolderBox.Text.Trim();
         _current.PreviewFile = PreviewBox.Text.Trim();
         _current.PublishedFileId = PublishedIdBox.Text.Trim();
-        _current.VdfPath = VdfPathBox.Text.Trim();
+        _current.VdfDir = VdfDirBox.Text.Trim();
     }
 
     private void UpdatePublishedHint()
@@ -273,11 +276,15 @@ public partial class MainWindow : Window
             SetTargetText((Button)sender, dlg.FileName);
     }
 
-    private void BrowseSaveFile_Click(object sender, RoutedEventArgs e)
+    private void BrowseVdfDir_Click(object sender, RoutedEventArgs e)
     {
-        var dlg = new SaveFileDialog { Title = "选择 VDF 保存位置", Filter = "VDF 文件 (*.vdf)|*.vdf", FileName = "workshopitem.vdf" };
-        if (dlg.ShowDialog(this) == true)
-            SetTargetText((Button)sender, dlg.FileName);
+        // 这里选的是“目录”：VDF 会写到该目录下的 workshopitem.vdf
+        var initial = _current != null && !string.IsNullOrWhiteSpace(_settings.RootDir)
+            ? FileManager.OutputDir(_settings.RootDir, _current)
+            : null;
+
+        var dir = PickFolder(initial);
+        if (dir != null) SetTargetText((Button)sender, dir);
     }
 
     private void SetTargetText(Button btn, string path)
@@ -287,7 +294,7 @@ public partial class MainWindow : Window
         if (box != null) box.Text = path;
     }
 
-    private string? PickFolder()
+    private string? PickFolder(string? initialDirectory = null)
     {
         // 用 WPF 实现文件夹选择（避免额外依赖）
         var dialog = new Microsoft.Win32.OpenFolderDialog
@@ -295,6 +302,10 @@ public partial class MainWindow : Window
             Title = "选择文件夹",
             Multiselect = false
         };
+
+        if (!string.IsNullOrWhiteSpace(initialDirectory) && Directory.Exists(initialDirectory))
+            dialog.InitialDirectory = initialDirectory;
+
         return dialog.ShowDialog(this) == true ? dialog.FolderName : null;
     }
 
@@ -364,7 +375,7 @@ public partial class MainWindow : Window
             ChangeNote = _current.ChangeNote,
             Description = _current.Description,
             PublishedFileId = "",
-            VdfPath = ""
+            VdfDir = ""
         };
         _profiles.Add(copy);
         SelectProfile(copy, saveCurrent: false);
@@ -658,13 +669,17 @@ public partial class MainWindow : Window
 
         // 生成 VDF（预览图不满足要求时跳过 previewfile 字段，不临时改动用户数据）
         var vdfText = VdfGenerator.Generate(p, includePreview: !skipPreview);
-        var useTempVdf = string.IsNullOrWhiteSpace(p.VdfPath);
-        var vdfPath = useTempVdf
-            ? Path.Combine(Path.GetTempPath(), $"workshopitem_{Guid.NewGuid():N}.vdf")
-            : p.VdfPath;
+
+        // VdfDir 为空 → 用系统临时目录；指定目录 → 写到该目录下的 workshopitem.vdf
+        var useTempVdf = string.IsNullOrWhiteSpace(p.VdfDir);
+        string vdfPath;
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(vdfPath) ?? ".");
+            var dir = useTempVdf ? Path.GetTempPath() : p.VdfDir;
+            Directory.CreateDirectory(dir);
+            vdfPath = useTempVdf
+                ? Path.Combine(dir, $"workshopitem_{Guid.NewGuid():N}.vdf")
+                : Path.Combine(dir, VdfFileName);
             File.WriteAllText(vdfPath, vdfText, new UTF8Encoding(false));
         }
         catch (Exception ex)
@@ -895,10 +910,9 @@ public partial class MainWindow : Window
                 broken.Add($"{p.Name} 内容文件夹：{p.ContentFolder}");
             if (!string.IsNullOrWhiteSpace(p.PreviewFile) && !File.Exists(p.PreviewFile))
                 broken.Add($"{p.Name} 预览图：{p.PreviewFile}");
-            // VdfPath 可能只是文件名（相对临时目录），此时没有目录可校验
-            if (!string.IsNullOrWhiteSpace(p.VdfPath) && Path.IsPathFullyQualified(p.VdfPath)
-                && !Directory.Exists(Path.GetDirectoryName(p.VdfPath)))
-                broken.Add($"{p.Name} VDF 路径：{p.VdfPath}");
+            // VdfDir 是“输出目录”，直接校验目录是否存在
+            if (!string.IsNullOrWhiteSpace(p.VdfDir) && !Directory.Exists(p.VdfDir))
+                broken.Add($"{p.Name} VDF 输出目录：{p.VdfDir}");
         }
 
         if (broken.Count == 0)
@@ -935,8 +949,8 @@ public partial class MainWindow : Window
             var pf = RepairPath(p.PreviewFile, oldRoot, newRoot);
             if (pf != p.PreviewFile) { p.PreviewFile = pf; fixedCount++; }
 
-            var vf = RepairPath(p.VdfPath, oldRoot, newRoot);
-            if (vf != p.VdfPath) { p.VdfPath = vf; fixedCount++; }
+            var vf = RepairPath(p.VdfDir, oldRoot, newRoot);
+            if (vf != p.VdfDir) { p.VdfDir = vf; fixedCount++; }
         }
 
         if (!string.Equals(_settings.RootDir, newRoot, StringComparison.OrdinalIgnoreCase))
@@ -948,17 +962,19 @@ public partial class MainWindow : Window
         // 4. 顺带更新 VDF 文件里的 contentfolder / previewfile 路径
         foreach (var p in _profiles)
         {
-            if (!string.IsNullOrWhiteSpace(p.VdfPath) && File.Exists(p.VdfPath))
+            if (string.IsNullOrWhiteSpace(p.VdfDir)) continue;
+
+            var vdfFile = Path.Combine(p.VdfDir, VdfFileName);
+            if (!File.Exists(vdfFile)) continue;
+
+            try
             {
-                try
-                {
-                    var c = File.ReadAllText(p.VdfPath);
-                    var c2 = ReplaceVdfField(c, "contentfolder", p.ContentFolder);
-                    c2 = ReplaceVdfField(c2, "previewfile", p.PreviewFile);
-                    if (c2 != c) File.WriteAllText(p.VdfPath, c2, new UTF8Encoding(false));
-                }
-                catch { /* 忽略 VDF 更新失败 */ }
+                var c = File.ReadAllText(vdfFile);
+                var c2 = ReplaceVdfField(c, "contentfolder", p.ContentFolder);
+                c2 = ReplaceVdfField(c2, "previewfile", p.PreviewFile);
+                if (c2 != c) File.WriteAllText(vdfFile, c2, new UTF8Encoding(false));
             }
+            catch { /* 忽略 VDF 更新失败 */ }
         }
 
         SaveSettings();
@@ -967,7 +983,7 @@ public partial class MainWindow : Window
         if (_current != null) LoadProfileToForm(_current);
         Log($"已修复 {fixedCount} 处路径，新根目录：{newRoot}");
         MessageBox.Show(this,
-            $"已修复 {fixedCount} 处路径。\n新根目录：{newRoot}\n\n请确认各 MOD 的内容文件夹、预览图、VDF 路径已更新。",
+            $"已修复 {fixedCount} 处路径。\n新根目录：{newRoot}\n\n请确认各 MOD 的内容文件夹、预览图、VDF 输出目录已更新。",
             "修复完成", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
