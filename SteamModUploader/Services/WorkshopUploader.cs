@@ -24,7 +24,9 @@ public sealed record UploadResult(
     bool TimedOut,
     string Message,
     string? BuildLogPath,
-    IReadOnlyList<string> BuildLogTail);
+    IReadOnlyList<string> BuildLogTail,
+    // 失败原因的中文诊断（能从输出里看出来时才有；成功时为 null）
+    string? Diagnosis);
 
 /// <summary>
 /// 「上传 / 更新创意工坊项目」的流程封装（与界面无关）：
@@ -35,7 +37,6 @@ public sealed class WorkshopUploader
 {
     /// <summary>只保留最后若干行输出用于结果判定，避免长时间上传时占用过多内存。</summary>
     private const int OutputKeepLines = 200;
-
     /// <summary>成功标志（Valve 文档：成功后 VDF 中的 publishedfileid 会被回写）。</summary>
     private static readonly string[] SuccessMarkers =
     {
@@ -129,10 +130,15 @@ public sealed class WorkshopUploader
             ? (null, Array.Empty<string>())
             : ReadBuildLog(steamCmdPath, target.AppId);
 
+        // 失败的真正原因可能只在构建日志里，所以两边一起看
+        var diagnosis = outcome == UploadOutcome.Succeeded
+            ? null
+            : SteamCmdLogInterpreter.Diagnose(_recentOutput.Concat(logTail));
+
         return new UploadResult(
             outcome, exitCode, id, timedOut,
             BuildMessage(outcome, exitCode, id, timedOut),
-            logPath, logTail);
+            logPath, logTail, diagnosis);
     }
 
     private void OnOutput(string line)
@@ -191,7 +197,14 @@ public sealed class WorkshopUploader
     }
 
     private bool HasMarker(IEnumerable<string> markers)
-        => _recentOutput.Any(line => markers.Any(m => line.Contains(m, StringComparison.OrdinalIgnoreCase)));
+        => MeaningfulOutput().Any(line => markers.Any(m => line.Contains(m, StringComparison.OrdinalIgnoreCase)));
+
+    /// <summary>
+    /// 有意义输出（排除 steamcmd 的内部自检信息）。
+    /// 那些行里有 "Assertion Failed" 之类的字样，如果不过滤，可能在退出码为 0（成功）时误判成上传失败。
+    /// </summary>
+    private IEnumerable<string> MeaningfulOutput()
+        => _recentOutput.Where(line => SteamCmdLogInterpreter.Interpret(line).Kind != SteamCmdLineKind.Noise);
 
     private static string BuildMessage(UploadOutcome outcome, int exitCode, string? id, bool timedOut) => outcome switch
     {

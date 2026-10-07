@@ -37,6 +37,11 @@ Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 - 🔐 **Steam Guard 支持**：登录需要验证码时自动弹出输入框
 - 📜 **实时日志 + 落盘**：显示 steamcmd 完整输出与进度；日志自动写入
   `%APPDATA%\SteamModUploader\logs\`，可一键导出
+- 🈶 **看得懂的日志**：自动折叠 steamcmd 内部的初始化/自检信息（如 `Assertion Failed`、
+  `work queue empty`），并给 `FAILED with result code 25`、`state is 0x406` 这类行补一句中文解释与处理建议；
+  失败时直接给出一句话结论，不用自己去读英文日志
+- 🧍 **单实例运行**：重复双击 exe 不会再开出第二个窗口，而是把已在运行的窗口叫到前台
+  （多份进程并发写同一份配置有互相覆盖的风险）
 - 🩺 **启动环境体检**：启动时提示 steamcmd 路径 / MOD 根目录是否有效
 - 🔍 **VDF 智能解析**：导入已有 `mod.vdf` 时支持转义引号，且保留路径中的反斜杠
   （`D:\new` 不会被错误还原成 `D:new`）
@@ -141,8 +146,10 @@ SteamModUploader/                   # 主程序
 │   └── AppSettings.cs              # 全局设置模型
 └── Services/
     ├── SettingsService.cs          # 配置持久化（JSON + DPAPI，原子写入 + .prev 备份）
+    ├── SingleInstance.cs           # 单实例守护（命名互斥体 + 唤起已有窗口到前台）
     ├── WorkshopUploader.cs         # 上传流程封装（参数 / 验证码 / 结果解析）
     ├── WorkshopOutputParser.cs     # 从 steamcmd 输出解析 PublishedFileID
+    ├── SteamCmdLogInterpreter.cs   # steamcmd 输出翻译（折叠噪音 + 错误码中文解释）
     ├── SteamCmdRunner.cs           # 启动 steamcmd、捕获输出、按需注入密码
     ├── SteamCmdLocator.cs          # 自动探测 steamcmd 安装位置
     ├── VdfGenerator.cs             # 生成 workshopitem VDF
@@ -153,7 +160,10 @@ SteamModUploader/                   # 主程序
 SteamModUploader.Tests/             # 单元测试（xunit）
 ├── VdfTests.cs                     # VDF 生成/解析、上传输出解析
 ├── FileManagerTests.cs             # 命名清洗、备份/恢复、zip-slip 防护
-└── SettingsServiceTests.cs         # 配置加密与脏数据容错
+├── SettingsServiceTests.cs         # 配置加密与脏数据容错
+├── SingleInstanceTests.cs          # 单实例判重
+├── SteamCmdLogInterpreterTests.cs  # steamcmd 输出的噪音识别与错误翻译
+└── WindowTests.cs                  # 窗口构造回归（STA 线程真实建窗）
 ```
 
 ## 开发

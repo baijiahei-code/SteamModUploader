@@ -30,6 +30,12 @@ public partial class MainWindow : Window
     private bool _isUploading;
     private CancellationTokenSource? _uploadCts;
 
+    /// <summary>本次上传里已经提示过的中文解释（同一句只提示一次，避免刷屏）。</summary>
+    private readonly HashSet<string> _shownSteamCmdHints = new();
+
+    /// <summary>本次上传折叠掉的 steamcmd 内部信息行数（原始内容仍写入日志文件）。</summary>
+    private int _hiddenSteamCmdLines;
+
     /// <summary>Steam 对创意工坊标题的长度限制。</summary>
     private const int MaxTitleLength = 128;
 
@@ -47,7 +53,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         _log = new LogPanel(LogBox);
 
-        _uploader.OutputReceived += (_, line) => Dispatcher.BeginInvoke(() => Log(line));
+        _uploader.OutputReceived += (_, line) => Dispatcher.BeginInvoke(() => LogSteamCmdLine(line));
         _uploader.PublishedFileIdFound += (_, id) => Dispatcher.BeginInvoke(() => OnPublishedFileIdFound(id));
         _uploader.ProgressChanged += (_, percent) => Dispatcher.BeginInvoke(() => OnUploadProgress(percent));
         _uploader.InputProvider = PromptForGuardCode;
@@ -745,6 +751,8 @@ public partial class MainWindow : Window
         Log($"已生成 VDF：{vdfPath}");
 
         SetUploading(true);
+        _shownSteamCmdHints.Clear();
+        _hiddenSteamCmdLines = 0;
         var isNewItem = string.IsNullOrWhiteSpace(p.PublishedFileId);
         try
         {
@@ -763,11 +771,19 @@ public partial class MainWindow : Window
                 _ => "⚠ " + result.Message
             });
 
+            // 能从输出里看出原因时，直接给出一句中文诊断，不用用户自己去读英文日志
+            if (result.Diagnosis != null)
+                Log("    → " + result.Diagnosis);
+
             // 失败时把 steamcmd 的构建日志展示出来：错误原因往往只写在这里
             if (result.BuildLogTail.Count > 0)
             {
                 Log($"--- steamcmd 构建日志（{result.BuildLogPath}）---");
-                foreach (var logLine in result.BuildLogTail) Log("    " + logLine);
+                foreach (var logLine in result.BuildLogTail)
+                {
+                    Log("    " + logLine);
+                    ExplainSteamCmdLine(logLine);
+                }
                 Log("--- 构建日志结束 ---");
             }
 
@@ -786,6 +802,12 @@ public partial class MainWindow : Window
             SetUploading(false);
             _uploadCts?.Dispose();
             _uploadCts = null;
+
+            if (_hiddenSteamCmdLines > 0)
+            {
+                Log($"（已折叠 {_hiddenSteamCmdLines} 行 steamcmd 内部的初始化/自检信息，完整内容见日志文件）");
+                _hiddenSteamCmdLines = 0;
+            }
         }
     }
 
@@ -1112,6 +1134,40 @@ public partial class MainWindow : Window
         line = MaskPassword(line, _settings.SteamPassword);
         _log.Append(line);
         Logger.Write(line);
+    }
+
+    /// <summary>
+    /// 显示一行 steamcmd 原始输出。
+    /// steamcmd 会打一大堆用户看不懂的内部英文信息（自检、状态码、ERESULT 编号），
+    /// 所以这里只显示有意义的部分，并给关键行补一句中文解释（同一句解释只提示一次）。
+    /// </summary>
+    private void LogSteamCmdLine(string line)
+    {
+        var reading = SteamCmdLogInterpreter.Interpret(line);
+
+        if (reading.Kind == SteamCmdLineKind.Noise)
+        {
+            // 界面折叠，但完整内容仍写入日志文件，方便排查
+            _hiddenSteamCmdLines++;
+            Logger.Write(MaskPassword("[steamcmd 内部信息] " + line, _settings.SteamPassword));
+            return;
+        }
+
+        Log(line);
+
+        if (reading.Hint != null && _shownSteamCmdHints.Add(reading.Hint))
+            Log("    → " + reading.Hint);
+    }
+
+    /// <summary>就地解释一行输出（用于「构建日志」里的英文内容），同一句解释只提示一次。</summary>
+    private void ExplainSteamCmdLine(string line)
+    {
+        var reading = SteamCmdLogInterpreter.Interpret(line);
+        if (reading.Hint == null) return;
+        if (reading.Kind is not (SteamCmdLineKind.Error or SteamCmdLineKind.Warning)) return;
+        if (!_shownSteamCmdHints.Add(reading.Hint)) return;
+
+        Log("    → " + reading.Hint);
     }
 
     private Regex? _maskRegex;
