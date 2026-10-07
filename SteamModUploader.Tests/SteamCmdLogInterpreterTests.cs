@@ -107,6 +107,38 @@ public class SteamCmdLogInterpreterTests
     }
 
     [Theory]
+    [InlineData("SteamUpdater: Error: Download failed: http error 0")]
+    [InlineData("SteamUpdater: Error: Steam needs to be online to update. Please confirm your network connection and try again.")]
+    public void 官方文档里的自更新错误_有中文解释(string line)
+    {
+        var reading = SteamCmdLogInterpreter.Interpret(line);
+
+        Assert.Equal(SteamCmdLineKind.Error, reading.Kind);
+        Assert.NotNull(reading.Hint);
+        Assert.Contains("网络", reading.Hint);
+    }
+
+    [Fact]
+    public void 官方No_subscription_解释为需要登录或已拥有游戏()
+    {
+        var reading = SteamCmdLogInterpreter.Interpret("ERROR! Failed to install app \"480\" (No subscription)");
+
+        Assert.Equal(SteamCmdLineKind.Error, reading.Kind);
+        Assert.NotNull(reading.Hint);
+        Assert.Contains("账号", reading.Hint);
+    }
+
+    [Fact]
+    public void 官方Login_Failure_No_Connection_提示检查网络()
+    {
+        var reading = SteamCmdLogInterpreter.Interpret("Login Failure: No Connection");
+
+        Assert.Equal(SteamCmdLineKind.Error, reading.Kind);
+        Assert.NotNull(reading.Hint);
+        Assert.Contains("网络", reading.Hint);
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("   ")]
     public void 空行当作噪音_不进界面(string line)
