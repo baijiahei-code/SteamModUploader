@@ -89,7 +89,28 @@ public class SteamCmdLogInterpreterTests
 
         var success = SteamCmdLogInterpreter.Interpret("Success. PublishedFileID: 1234567890");
         Assert.Equal(SteamCmdLineKind.Success, success.Kind);
+
+        var commit = SteamCmdLogInterpreter.Interpret("Committing update...Success.Unloading Steam API...OK");
+        Assert.Equal(SteamCmdLineKind.Success, commit.Kind);
     }
+
+    [Theory]
+    [InlineData("[  0%] 正在检查可用更新...")]
+    [InlineData("[----] 正在验证安装...")]
+    public void 本地化自助更新提示_也能被解释(string line)
+    {
+        var reading = SteamCmdLogInterpreter.Interpret(line);
+
+        Assert.Equal(SteamCmdLineKind.Warning, reading.Kind);
+        Assert.NotNull(reading.Hint);
+        Assert.Contains("自动更新", reading.Hint);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void 空行当作噪音_不进界面(string line)
+        => Assert.Equal(SteamCmdLineKind.Noise, SteamCmdLogInterpreter.Interpret(line).Kind);
 
     [Fact]
     public void 诊断_噪音行不会当成失败原因()

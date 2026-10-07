@@ -37,8 +37,9 @@ Steam 创意工坊 MOD，替代手动编写 VDF 和批处理脚本。
 - 🔐 **Steam Guard 支持**：登录需要验证码时自动弹出输入框
 - 📜 **实时日志 + 落盘**：显示 steamcmd 完整输出与进度；日志自动写入
   `%APPDATA%\SteamModUploader\logs\`，可一键导出
-- 🈶 **看得懂的日志**：自动折叠 steamcmd 内部的初始化/自检信息（如 `Assertion Failed`、
-  `work queue empty`），并给 `FAILED with result code 25`、`state is 0x406` 这类行补一句中文解释与处理建议；
+- 🈶 **看得懂的日志**：steamcmd 的本地化文本按 **UTF-8** 解码（否则中文提示会变成「姝ｅ湪妫€鏌?...」这类乱码），
+  自动折叠内部的初始化/自检信息（如 `Assertion Failed`、`work queue empty`），
+  并给 `FAILED with result code 25`、`state is 0x406` 这类行补一句中文解释与处理建议；
   失败时直接给出一句话结论，不用自己去读英文日志
 - 🧍 **单实例运行**：重复双击 exe 不会再开出第二个窗口，而是把已在运行的窗口叫到前台
   （多份进程并发写同一份配置有互相覆盖的风险）

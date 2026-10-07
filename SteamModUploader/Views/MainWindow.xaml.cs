@@ -1143,6 +1143,9 @@ public partial class MainWindow : Window
     /// </summary>
     private void LogSteamCmdLine(string line)
     {
+        // 空行（steamcmd 会打空行分隔）不必显示
+        if (string.IsNullOrWhiteSpace(line)) return;
+
         var reading = SteamCmdLogInterpreter.Interpret(line);
 
         if (reading.Kind == SteamCmdLineKind.Noise)

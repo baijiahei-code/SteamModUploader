@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 
 namespace SteamModUploader.Services;
 
@@ -47,18 +48,7 @@ public class SteamCmdRunner
 
     public async Task<int> RunAsync(string steamCmdPath, string[] args, CancellationToken ct = default)
     {
-        var psi = new ProcessStartInfo
-        {
-            FileName = steamCmdPath,
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            RedirectStandardInput = true,
-            CreateNoWindow = true,
-            WorkingDirectory = Path.GetDirectoryName(steamCmdPath) ?? ""
-        };
-        foreach (var a in args) psi.ArgumentList.Add(a);
-
+        var psi = BuildStartInfo(steamCmdPath, args);
         using var proc = new Process { StartInfo = psi, EnableRaisingEvents = true };
         using var cancelReg = ct.Register(() =>
         {
@@ -109,6 +99,31 @@ public class SteamCmdRunner
             // 等待异步输出读取结束，确保最后几行日志（如 publishedfileid）不丢失
             try { proc.WaitForExit(); } catch { }
         }
+    }
+
+    /// <summary>
+    /// 构造启动参数。单独抽出来是为了能被单元测试固定住输出编码。
+    ///
+    /// 输出编码必须显式指定成 UTF-8：steamcmd 的本地化文本（如「正在检查可用更新...」）
+    /// 是按 UTF-8 输出的，不指定时 .NET 会用系统 ANSI 代码页（中文系统 = 936）去解码，
+    /// 中文会变成「姝ｅ湪妫€鏌ュ彲鐢ㄦ洿鏂?...」这类乱码。
+    /// </summary>
+    public static ProcessStartInfo BuildStartInfo(string steamCmdPath, string[] args)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = steamCmdPath,
+            UseShellExecute = false,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            RedirectStandardInput = true,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8,
+            WorkingDirectory = Path.GetDirectoryName(steamCmdPath) ?? ""
+        };
+        foreach (var a in args) psi.ArgumentList.Add(a);
+        return psi;
     }
 
     /// <summary>

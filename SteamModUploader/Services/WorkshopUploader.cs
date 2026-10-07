@@ -42,7 +42,8 @@ public sealed class WorkshopUploader
     {
         "success. publishedfileid",
         "success. published file id",
-        "uploaded item"
+        "uploaded item",
+        "committing update...success"
     };
 
     /// <summary>常见失败标志。</summary>

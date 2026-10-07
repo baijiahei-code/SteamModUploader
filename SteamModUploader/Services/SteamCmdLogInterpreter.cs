@@ -147,17 +147,22 @@ public static partial class SteamCmdLogInterpreter
         "downloading update",
         "update complete, launching",
         "verifying installation",
+        // steamcmd 的本地化输出（中文系统上就是中文，程序中已按 UTF-8 解码）
+        "正在检查可用更新",
+        "正在下载更新",
+        "正在验证安装",
+        "更新完成",
     };
 
     /// <summary>解读一行 steamcmd 输出。</summary>
     public static SteamCmdLineReading Interpret(string? line)
     {
-        if (string.IsNullOrWhiteSpace(line)) return new SteamCmdLineReading(SteamCmdLineKind.Info, null);
+        if (string.IsNullOrWhiteSpace(line)) return new SteamCmdLineReading(SteamCmdLineKind.Noise, null);
 
         var text = line.Trim();
 
         // 1) 明确的成功
-        if (ContainsAny(text, "success. publishedfileid", "success. published file id", "uploaded item"))
+        if (ContainsAny(text, "success. publishedfileid", "success. published file id", "uploaded item", "committing update...success"))
             return new SteamCmdLineReading(SteamCmdLineKind.Success, null);
 
         // 2) 内部自检信息（必须排在错误兜底之前：这些行里有 failed / Assertion 字样）
