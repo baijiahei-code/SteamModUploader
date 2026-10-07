@@ -1,7 +1,6 @@
 <Application x:Class="SteamModUploader.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             StartupUri="Views/MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <!-- ==================== 全局共享样式（所有窗口/对话框统一使用） ==================== -->
 
